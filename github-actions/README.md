@@ -1,6 +1,6 @@
 # Github Action
 
-- source: [../.github/workflows](.github/workflows)
+- source: [.github/workflows](../.github/workflows)
 - workflow syntax: https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#onevent_nametypes
 
 ## on.push
