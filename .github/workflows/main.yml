@@ -13,27 +13,3 @@ jobs:
         git branch -v
         git remote -v
         echo '===================='
-
----
-
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - github-actions/**/*
-
-jobs:
-  main:
-    runs-on: [ubuntu-18.04]
-    steps:
-    - uses: actions/checkout@v2
-    - name: on push
-      run: |
-        echo '==== GIT INFO ===='
-        git branch -v
-        git remote -v
-        echo '=================='
-
----
-
