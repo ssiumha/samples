@@ -16,3 +16,20 @@ jobs:
         git branch -v
         git remote -v
         echo '=================='
+
+---
+
+on:
+  pull_request:
+    paths: github-actions/**/*
+
+jobs:
+  multiple-doc:
+    runs-on: [ubuntu-18.04]
+    steps:
+    - name: test state
+      run: |
+        echo '==== FAILE CASE ===='
+        git branch -v
+        git remote -v
+        echo '===================='
