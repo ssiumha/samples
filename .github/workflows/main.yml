@@ -21,7 +21,8 @@ jobs:
 
 on:
   pull_request:
-    paths: github-actions/**/*
+    paths:
+      - github-actions/**/*
 
 jobs:
   multiple-doc:
