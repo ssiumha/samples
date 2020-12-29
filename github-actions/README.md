@@ -36,3 +36,11 @@
   ```
 
 4. 하나의 yml 파일을 '---'을 사용한 여러 문서로 구성하는건 불가능하다. 조건별로 파일이 나눠져야한다
+
+## github object examples
+
+```
+${{ github.event_name }}  # pull_request
+${{ github.event.action }}  # unassigned
+
+```
