@@ -42,9 +42,9 @@ test-state:
 # 	* 환경변수로 받았을 때 `?=`로 선언하지 않았다면 덮어쓴다
 # 	* 변수인자로 받으면 기존 변수 선언이 평가조차 되지 않고 무시된다
 
-# make test-variable          	# output> variable /
-# AAA=123 make test-variable  	# output> variable / variable			* ?= 로 선언되었다면 123 / 123
-# make test-variable AAA=123  	# output> 123 / 123
+# make test-variable            # output> variable /
+# AAA=123 make test-variable    # output> variable / variable  * ?= 로 선언되었다면 123 / 123
+# make test-variable AAA=123    # output> 123 / 123
 AAA = variable
 test-variable:
 	echo $(AAA) / $$AAA
@@ -55,9 +55,9 @@ test-variable-all:
 	@echo '---'
 	make test-variable AAA=123
 
-# make test-env 					 	# output> /
-# BBB=123 make test-env    	# output> 123 / 123
-# make test-env BBB=123 		# output> 123 / 123
+# make test-env             # output> /
+# BBB=123 make test-env     # output> 123 / 123
+# make test-env BBB=123     # output> 123 / 123
 test-env:
 	echo $(BBB) / $$BBB
 test-env-all:
