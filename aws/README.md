@@ -44,9 +44,24 @@ aws ecr describe-images --repository-name <name> \
 - https://ap-northeast-2.console.aws.amazon.com/eks/home?region=ap-northeast-2#/clusters
 
 ```bash
-# Load config
+# Load config (~/.kube/config)
 aws eks --region ap-northeast-2 update-kubeconfig --name <name>
 kubectl config use-context arn:aws:eks:ap-northeast-2:<aws_account_id>:cluster/<name>
+kubectl config view
+kubectl config view --minify --flatten --context=arn:aws:eks:ap-northeast-2:xxxxxx:cluster/xxxxxx
+
+# no using kubeconfig with AWS
+# ref: https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/
+kubectl \
+  --server $(aws eks describe-cluster --name <name> | jq -r '.cluster.endpoint') \
+  --token $(aws --region ap-northeast-2 eks get-token --cluster-name <name> | jq -r '.status.token') \
+  --insecure-skip-tls-verify \
+  get all
+
+# using docker image
+docker run --rm bitnami/kubectl:1.19.6 \
+  --server <...> --token <...> --insecure-skip-tls-verify \
+  get all
 ```
 
 ## S3
