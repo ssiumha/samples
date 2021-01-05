@@ -59,8 +59,12 @@ kubectl \
   get all
 
 # using docker image
+# docker cmd 부분의 환경변수는 현재 shell 값이 평가되지만 명령은 내부에서 평가된다
+# docker image 안에서 aws 포함작업 하는게 귀찮으니 환경변수로 넘기는게 편할듯
+SERVER=<...>
+TOKEN=<...>
 docker run --rm bitnami/kubectl:1.19.6 \
-  --server <...> --token <...> --insecure-skip-tls-verify \
+  --server $SERVER --token $TOKEN --insecure-skip-tls-verify \
   get all
 ```
 
