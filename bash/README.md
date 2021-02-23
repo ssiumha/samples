@@ -60,9 +60,15 @@ watch --color -- kubectl get all -A '|' awk "' \
 ## git
 
 ```bash
-# 히스토리 전체검색 (특정파일 제외)
+# 히스토리 로그 검색 (특정파일 제외)
 git log --patch --stat --grep xxxxxx -- . ":(exclude)*.json"
 git log --patch --stat --grep xxxxxx -- . ":(exclude)*/specific-filename.yaml"
+
+# 히스토리 패치 grep
+git log --patch -G 'ASDFASDF'
+
+# 지워진 파일만 보기
+git log --patch --diff-filter=D
 ```
 
 
