@@ -1,0 +1,40 @@
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Deploy sample when merged
+    runs-on: [self-hosted, linux]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install jq
+      run: sudo apt install -y jq
+
+    - name: build -> push -> eks pod restart (using latest)
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ap-northeast-2
+        EKS_CLUSTER: cluster_name
+        EKS_NAMESPACE: namespace
+      working-directory: ./
+      run: |
+        aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email
+
+        DOCKER_BUILDKIT=1 docker build --no-cache --tag <image:latest> <...>
+        docker push <image:latest>
+
+        docker image prune --force
+        docker builder prune --force
+
+        export EKS_ENDPOINT=$(aws eks describe-cluster --name $EKS_CLUSTER | jq -r '.cluster.endpoint')
+        export EKS_TOKEN=$(aws --region ap-northeast-2 eks get-token --cluster-name $EKS_CLUSTER | jq -r '.status.token')
+
+        docker run --rm bitnami/kubectl:1.19.6 --server $EKS_ENDPOINT --token $EKS_TOKEN --insecure-skip-tls-verify \
+          rollout restart -n$EKS_NAMESPACE \
+            deployment.apps/some-server-name

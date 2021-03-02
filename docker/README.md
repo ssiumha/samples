@@ -1,0 +1,116 @@
+# Docker
+
+local 개발환경 구축할 때 삽질하기 쉬운 내용 모아두기
+
+
+```
+docker run -it --network=host edenhill/kafkacat:1.6.0 -b YOUR_BROKER -L
+```
+
+## dockerfile
+
+### cache
+
+cache는 기본적으로 명령 한줄 단위로 레이어가 구성되며
+copy, add 같은 경우 파일의 checksum을 통해 캐시된 레이어를 사용할지 말지를 결정한다.
+
+1. 거의 변화가 없는 runtime install
+2. 자주 업데이트 안되고 무게가 큰 package.json, Gemfile 등의 copy & install
+3. 변경이 자주 되는 실제 소스 파일
+
+순으로 배치함으로써 캐시의 활용성을 높일 수 있다.
+
+### env
+
+```
+ENV A=FOO B=BAR
+```
+
+기본적으로 설정될 환경변수, 외부에서 다른 환경변수를 받아올 수도 있다.
+환경변수가 바뀌면 그 다음 명령부터 새로운 레이어를 만든다.
+
+### cmd & entrypoint
+
+docker image의 기본 실행 명령.
+
+entrypoint가 좀 더 우선도가 높고, 기본 명령어 취급이며 양쪽다 사용할 경우
+cmd는 entrypoint 뒤에 덧붙여지게 된다.
+
+```
+CMD ["World"]
+ENTRYPOINT ["echo", "Hello"]
+#> Hello World
+```
+
+docker run 이미지 이름 다음에 적는 인자는 전부 cmd로 들어가며 entrypoint를 덮어쓰려면
+`docker run --entrypoint='...'` 형태로 별도 인자를 줘야한다.
+
+
+## DOCKER_BUILDKIT
+- https://github.com/moby/buildkit
+- https://docs.docker.com/develop/develop-images/build_enhancements/
+
+```
+DOCKER_BUILDKIT=1 docker build --help
+```
+
+docker 18.09부터 buildkit 환경 변수를 설정해서 향상된 도커 빌드 시스템을 사용할 수 있다.
+(`docker build --help`와 비교해보면 옵션도 다르다)
+
+- 필요없는 빌드 스테이지 스킵
+- 병렬 빌드
+- 빌드간 변경된 파일만 전송
+- 새 버전의 Dockerfile 구현체 사용
+- 등등
+
+## full template
+
+```
+gtar -X .dockerignore -czh . \
+  | DOCKER_BUILDKIT=1 docker build --progress=plain \
+    --file docker/Dockerfile \
+    --target 0 \
+    --build-args ARG_NAME1=fooooooooooo \
+    --build-args ARG_NAME2=barrrrrrrrrr \
+    --tag awesome-name:tag1 \
+    --tag awesome-name:latest \
+    -
+
+```
+
+## access to host
+
+network가 bridge일 떄, host.docker.internal 로 host에 접근이 가능하다
+
+
+## inspect
+
+container 정보를 얻어오는 기능, json query 예시 등등
+
+```
+# container gateway IP 가져오기
+# host.docker.internal 을 사용할 수 없는 상황에서 사용?
+docker inspect -f "{{ .NetworkSettings.Gateway }}" "$CONTAINER_NAME"
+
+# src_port를 지정하지 않았을 때 (docker ... --publish 61234 ), docker에서 임의로 할당한 포트 가져오기
+docker inspect -f "{{(index (index .NetworkSettings.Ports \"$PORT/tcp\") 0).HostPort}}" "$CONTAINER_NAME"
+```
+
+## prune
+
+더 이상 사용안하는 이미지, 캐시 등을 삭제
+
+```
+# https://docs.docker.com/engine/reference/commandline/system_prune/
+# container, network, dangling images, build cache
+docker sysetm prune
+
+# volume 포함
+docker sysetm prune --volumes
+
+# volume만
+docker volume prune
+
+# crontab에서 쓰자
+0 9 * * * docker system prune -f --volumes 2>&1 > /tmp/docker-system-prune
+```
