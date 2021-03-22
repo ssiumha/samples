@@ -69,6 +69,10 @@ git log --patch -G 'ASDFASDF'
 
 # 지워진 파일만 보기
 git log --patch --diff-filter=D
+
+# 특정 폴더 내의 diff 파일 비교 풀로 하기
+#   - abbrev: revision 길이 제한
+git diff --abbrev=7 --full-index --stat=999,999 --stat-graph-width=20 $$LAST..$$CURR -- src/path | cat
 ```
 
 

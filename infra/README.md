@@ -11,6 +11,20 @@ terraform plan -out plan.out | tee plan.std.out
 terraform apply plan.out
 ```
 
+
+## helm
+
+```
+helm status -n<namespace> <release_name>
+
+helm diff upgrade <release_name> <helm_chart> -n<namespace> --values=values.yaml --allow-unreleased
+
+helm get values <release_name> -n<namespace>
+
+helm history -n<namespace> <release_name> --max 3
+```
+
+
 ## kube
 
 - https://kubernetes.github.io/ingress-nginx/examples/auth/basic/
@@ -66,15 +80,72 @@ kubectl delete <node/ip-00-00-00-00>
 # node가 새로 뜰 때 VPC에서 할당할 수 있는 모든 IP를 써버릴 때가 있다. 그럴때 일단 썻던거
 kubectl -n kube-system set env daemonset aws-node WARM_IP_TARGET=2
 ```
+### Affinity
 
-## helm
+pod가 새로 뜰 때, 어떤 node를 선택할지 사용자가 임의로 룰을 지정하는 기능.
+
+requiredDuringSchedulingIgnoredDuringExecution
+preferredDuringSchedulingIgnoredDuringExecution
+
+
+### Ingress
+
+
+#### Rewrite
+
+- https://kubernetes.github.io/ingress-nginx/examples/rewrite/
+- https://www.nginx.com/blog/creating-nginx-rewrite-rules/
+- https://kubernetes.github.io/ingress-nginx/user-guide/nginx-configuration/annotations/
+
+test.example.com/foo 를 www.example.com/foo 로 redirect 시키는 설정 (host 변경)
+
 
 ```
-helm status -n<namespace> <release_name>
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: test-example-com
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: http-nginx-ingress
+    nginx.ingress.kubernetes.io/server-snippet: |
+      rewrite ^ https://www.example.com$request_uri redirect;
 
-helm diff upgrade <release_name> <helm_chart> -n<namespace> --values=values.yaml --allow-unreleased
+# - redirect(302) 대신 permanent(301)를 사용하면 브라우저에 캐시가 남아서 변경 대응이 힘들 수 있음
+# - 특정 path에 대해서만 동작시키고 싶은 경우
+#     rewrite ^/tabs/.*? https://www.example.com$request_uri redirect;
 
-helm get values <release_name> -n<namespace>
+spec:
+  tls:
+    - hosts:
+        - test.example.com
+      secretName: test-example-com-tls
+  rules:
+    - host: test.example.com
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: test-web-server-service
+              servicePort: 8080
 
-helm history -n<namespace> <release_name> --max 3
+---
+
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: test-example-com-tls
+  namespace: default
+spec:
+  secretName: test-example-com-tls
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  commonName: test-example-com-tls
+  dnsNames:
+    - test.example.com
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
 ```
+
+

@@ -48,6 +48,29 @@ Document  := Row
 - https://www.elastic.co/guide/en/elasticsearch/reference/current/keyword.html
 - https://www.elastic.co/guide/en/elasticsearch/reference/current/text.html
 
+## Node
+
+### Master
+
+- 각 노드가 갖고 있는 인덱스의 메타데이터, 샤드위치, 클러스터 상태 등을 관리
+- Split brain 이슈를 피하기 위해서 node 갯수는 홀수개로 유지하는게 좋다
+
+### Ingest
+
+- 문서를 인덱싱하기 전에 pre-process 하는 노드
+- index, bulk 요청을 받아서 처리하고 다시 넘긴다
+
+
+### Coordinating
+
+- 검색 요청이 들어왔을 때 해당되는 데이터가 있는 노드로 라우팅해주는 역할을 한다
+- 각 노드의 처리 결과를 취합해서 반환한다
+- 메모리, CPU 자원을 많이 쓰는 편
+
+### Data
+
+- 실제 데이터가 나뉘어서 들어가 있는 노드
+
 ## Query
 
 기본 쿼리 형태:

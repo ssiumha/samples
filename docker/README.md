@@ -9,6 +9,25 @@ docker run -it --network=host edenhill/kafkacat:1.6.0 -b YOUR_BROKER -L
 
 ## dockerfile
 
+### FROM
+
+한 파일 안에 여러 FROM을 사용하면 FROM 단위로 멀티스테이지 구성이 된다.
+
+FROM에 ARG 변수를 쓸 수 있는데, 이를 활용해서 arg를 넘겼을 때 빌드없이 registry에서 받아오게 하는 것도 가능
+
+```
+ARG IMAGE_NAME=img1
+
+FROM registry-url/img:latest as img1
+...
+
+FROM $IMAGE_NAME as img2
+...
+```
+
+- IMAGE_NAME이 registry-url/img:latest고 target이 img2 면 무조건 registry에서 다운받아옴
+- IMAGE_NAME이 없으면 img1을 빌드하고 img2를 사용
+
 ### cache
 
 cache는 기본적으로 명령 한줄 단위로 레이어가 구성되며

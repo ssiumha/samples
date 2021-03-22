@@ -20,3 +20,11 @@ File.write(
   )
 )
 ```
+
+### 함수 정의 위치 찾기
+
+```ruby
+method(:get).source_location
+
+ClassName.new.method(:method_symbol).source_location
+```
