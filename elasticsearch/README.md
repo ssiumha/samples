@@ -48,6 +48,13 @@ Document  := Row
 - https://www.elastic.co/guide/en/elasticsearch/reference/current/keyword.html
 - https://www.elastic.co/guide/en/elasticsearch/reference/current/text.html
 
+## Trouble Shooting
+
+- refresh 작업은 index 갯수에 비례해서 늘어나며 Thread Pool operations completed 수치가 치솟으며 다른 작업에 영향을 줄 수 있다
+  - 대규모 reindex를 진행하며 index가 대량으로 늘어났을 때, JVM 메모리 사용량과 Old GC가 늘어날 수 있다
+  - index segments가 늘어나며 전체적인 처리가 느려진다
+- Old GC가 낮은 빈도로 처리되는게 중요하다?
+
 ## Node
 
 ### Master

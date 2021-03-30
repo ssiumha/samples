@@ -22,6 +22,9 @@ helm diff upgrade <release_name> <helm_chart> -n<namespace> --values=values.yaml
 helm get values <release_name> -n<namespace>
 
 helm history -n<namespace> <release_name> --max 3
+
+# {{ .Chart }}, {{ .Release }} 에 접근할 수 있지만 다른 템플릿 기능은 쓰지 못할 때 이용
+helm template . --show-only values.yaml.tmpl > values.yaml
 ```
 
 
@@ -90,6 +93,9 @@ preferredDuringSchedulingIgnoredDuringExecution
 
 ### Ingress
 
+#### cert-manager wildcard certificate
+- https://cert-manager.io/docs/configuration/acme/dns01/
+- https://letsencrypt.org/docs/faq/#does-let-s-encrypt-issue-wildcard-certificates
 
 #### Rewrite
 

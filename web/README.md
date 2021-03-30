@@ -20,5 +20,7 @@ meta 정보 갱신이 잘안되면 툴에서 강제로 가능: https://developer
 ## DNS
 
 - www.example.com와 example.com은 같은 SSL 인증서를 사용할 수 있다
-
+- *.example.com과 sub.example.com이 함께 정의되어 있다면 명시된 sub 도메인을 찾은 뒤, wildcard로 라우팅된다. (RFC 1912)
+  - 문서내 예시는 MX지만 CANME도 동일하게 적용됨
+  - RFC6126 - wildcard는 가장 왼쪽에 하나만 존재할 수 있다
 

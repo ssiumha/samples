@@ -86,3 +86,23 @@ curl https://api.ipify.org
 curl https://api.ipify.org?format=json # json format: {"ip":"xxx.xxx.xxx.xxx"}
 curl https://api64.ipify.org  # IPv6
 ```
+
+
+## Perl
+
+```
+# strip ansi code
+perl -MTerm::ANSIColor=colorstrip -ne 'print colorstrip($_)'
+
+# Add line if not found
+perl -i -p0e '$_.="export PATH=~/bin:\$PATH\n" unless m!~/bin:!' ~/.bashrc
+```
+
+
+
+## aws
+
+```
+# unsort uniq
+cat ... | awk '!a[$0]++'
+```

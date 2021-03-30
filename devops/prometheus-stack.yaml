@@ -1,0 +1,63 @@
+alertmanager:
+   alertmanagerSpec:
+     externalUrl: alertmanager.example.com
+     replicas: 2
+
+   # ref: https://prometheus.io/docs/alerting/configuration/#configuration-file
+   #      https://prometheus.io/webtools/alerting/routing-tree-editor/
+   config:
+     global:
+       resolve_timeout: 5m
+       slack_api_url: 'https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX'
+
+     route:
+       group_by:
+       - alertname
+       group_wait: 30s
+       group_interval: 5m
+       repeat_interval: 4h
+       receiver: 'slack-alert-dev'
+       routes:
+       - receiver: 'slack-alert-dev-watchdog'
+         repeat_interval: 12h
+         match:
+           alertname: Watchdog
+
+     receivers:
+     - name: 'slack-alert-dev'
+       slack_configs:
+       - channel: 'alert-dev'
+         username: 'AlertManager'
+         send_resolved: true
+         title: |-
+           [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }} for {{ .CommonLabels.job }}
+           {{- if gt (len .CommonLabels) (len .GroupLabels) -}}
+             {{" "}}(
+             {{- with .CommonLabels.Remove .GroupLabels.Names }}
+               {{- range $index, $label := .SortedPairs -}}
+                 {{ if $index }}, {{ end }}
+                 {{- $label.Name }}="{{ $label.Value -}}"
+               {{- end }}
+             {{- end -}}
+             )
+           {{- end }}
+         text: |-
+           {{ range .Alerts }}
+           {{ if and (eq .Labels.severity "critical") (eq .Status "firing") }}<!here>
+           {{ end -}}
+           *Alert:* {{ .Annotations.summary }} - `{{ .Labels.severity }}`
+           *Description:* {{ .Annotations.description }}
+           {{ if .Annotations.runbook }}*Runbook:* <{{ .Annotations.runbook }}>
+           {{ end -}}
+           *Labels:*
+             {{ range .Labels.SortedPairs }} - {{ .Name }}: `{{ .Value }}`
+             {{ end }}
+           {{ end }}
+
+     - name: 'slack-alert-dev-watchdog'
+       slack_configs:
+       - channel: 'alert-dev'
+         username: 'Watchdog'
+         color: 'good'
+         title: 'Alertmanager is fine'
+         text: ''
