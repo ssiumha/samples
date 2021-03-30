@@ -30,9 +30,11 @@ alertmanager:
          username: 'AlertManager'
          send_resolved: true
          title: |-
-           [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }} for {{ .CommonLabels.job }}
+           [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+           {{- if .CommonAnnotations.postfix }} for {{ .CommonAnnotations.postfix }} {{- end }}
+         text: |-
            {{- if gt (len .CommonLabels) (len .GroupLabels) -}}
-             {{" "}}(
+             {{"*CommonLabels*: "}}(
              {{- with .CommonLabels.Remove .GroupLabels.Names }}
                {{- range $index, $label := .SortedPairs -}}
                  {{ if $index }}, {{ end }}
@@ -41,12 +43,13 @@ alertmanager:
              {{- end -}}
              )
            {{- end }}
-         text: |-
            {{ range .Alerts }}
            {{ if and (eq .Labels.severity "critical") (eq .Status "firing") }}<!here>
            {{ end -}}
            *Alert:* {{ .Annotations.summary }} - `{{ .Labels.severity }}`
            *Description:* {{ .Annotations.description }}
+           {{ if .GeneratorURL }}*Graph:* <{{ reReplaceAll "g0.tab=1" "g0.tab=0" .GeneratorURL }}|:chart_with_upwards_trend:>
+           {{ end -}}
            {{ if .Annotations.runbook }}*Runbook:* <{{ .Annotations.runbook }}>
            {{ end -}}
            *Labels:*
