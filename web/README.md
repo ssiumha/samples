@@ -1,8 +1,36 @@
 # Web
 
-코딩말고 기타 웹 환경적인 부분들
+- [css](./css.md)
+- [js](./js.md)
 
-## open graph
+
+## XPath
+
+- `=`는 완전 일치, 부분 일치는 contains 사용
+- `/` : 직계자손만 체크 (css: `>`)
+- `//` : 하위요소 중에서 체크
+
+```
+# div#article_body의 innerText
+//div[@id='article_body']/text()
+
+# innertText가 원문인 것을 찾음
+//a[text()='원문']
+
+# 자식 구조
+//div[@class='sponsor']/a[text()='원문']
+
+# 복수 조건 + 프로퍼티 추출
+a[text()='원문'][@class='basic_doc']/@href
+
+# class에서 부분 일치
+div[contains(@class, 'some-class')]
+```
+
+
+## 코딩말고 기타 웹 환경적인 부분들
+
+### open graph
 
 ```
 <meta property="og:title" content="title..">
@@ -17,7 +45,7 @@ meta 정보 갱신이 잘안되면 툴에서 강제로 가능: https://developer
 페이스북에서 이미 게시글에 등록된 OG 메타정보는 수정되지 않는다.
 
 
-## DNS
+### DNS
 
 - www.example.com와 example.com은 같은 SSL 인증서를 사용할 수 있다
 - *.example.com과 sub.example.com이 함께 정의되어 있다면 명시된 sub 도메인을 찾은 뒤, wildcard로 라우팅된다. (RFC 1912)

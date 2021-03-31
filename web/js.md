@@ -1,5 +1,6 @@
 # Javascript
 
+일단 주로 웹 관련된 내용 적어놓기, node나 순수 js는 별도로..
 
 ## Web
 
