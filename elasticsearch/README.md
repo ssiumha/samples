@@ -53,7 +53,22 @@ Document  := Row
 - refresh 작업은 index 갯수에 비례해서 늘어나며 Thread Pool operations completed 수치가 치솟으며 다른 작업에 영향을 줄 수 있다
   - 대규모 reindex를 진행하며 index가 대량으로 늘어났을 때, JVM 메모리 사용량과 Old GC가 늘어날 수 있다
   - index segments가 늘어나며 전체적인 처리가 느려진다
-- Old GC가 낮은 빈도로 처리되는게 중요하다?
+
+- Old GC가 낮은 빈도로 처리되는지 보는게 중요하다?
+
+- ES 내부에 자체적으로 OOM 발생을 막기 위한 circuit breaker가 존재한다. JVM 지표와 함께 메모리 위험발생을 알 수 있는 지표가 되준다
+  - https://www.elastic.co/guide/en/elasticsearch/reference/current/circuit-breaker.html#parent-circuit-breaker
+
+- 메모리 사이즈를 잘 설정하자
+  - https://www.elastic.co/guide/en/elasticsearch/guide/2.x/heap-sizing.html#_give_less_than_half_your_memory_to_lucene
+
+## MISC
+
+- term, match, match_phrase 동작 차이 확인하기, kibana에서는 match_phrase가 기본 검색으로 작동한다
+  - term은 inverted index에 저장된 token 중에 일치하는 것을 찾고
+  - match는 검색할 키워드를 analyze 하고서 검색한다
+  - match_phrase는 쿼리 문자열이 순서를 유지한채 본문에서 나타나는 경우를 찾는다
+
 
 ## Node
 
