@@ -17,14 +17,17 @@ terraform apply plan.out
 ```
 helm status -n<namespace> <release_name>
 
-helm diff upgrade <release_name> <helm_chart> -n<namespace> --values=values.yaml --allow-unreleased
+helm diff upgrade <release_name> <helm_chart> --namespace <namespace> --values=values.yaml --allow-unreleased
+helm diff rollback --namespace <namespace> <release_name> <revision>
 
-helm get values <release_name> -n<namespace>
+helm get values <release_name> --namespace <namespace>
 
-helm history -n<namespace> <release_name> --max 3
+helm history --namespace <namespace> <release_name> --max 3
 
 # {{ .Chart }}, {{ .Release }} 에 접근할 수 있지만 다른 템플릿 기능은 쓰지 못할 때 이용
 helm template . --show-only values.yaml.tmpl > values.yaml
+
+helm rollback --namespace data --wait kafka 99
 ```
 
 
@@ -82,6 +85,21 @@ kubectl delete <node/ip-00-00-00-00>
 # https://github.com/aws/amazon-vpc-cni-k8s/blob/master/docs/eni-and-ip-target.md
 # node가 새로 뜰 때 VPC에서 할당할 수 있는 모든 IP를 써버릴 때가 있다. 그럴때 일단 썻던거
 kubectl -n kube-system set env daemonset aws-node WARM_IP_TARGET=2
+
+
+# livenessProbe
+# 아래와 같이 정의하면 describe로 봤을 때 `Liveness: http-get http://:probe/health` 로 표시된다.
+# 하지만 실제로 livenessProbe가 작동할 때는 localhost가 아닌 pod ip에 대해 쿼리를 보내므로, ip 대역에 대한 host allow가 필요하다
+# ex) config.hosts << /\A10\.\d+\.\d+\.\d+\z/
+livenessProbe:
+  httpGet
+    path: /health
+    port: probe
+
+
+# 실제 사용중인 volume 가져오기
+kubectl get pods -A -o=json \
+  | jq -c '.items[] | {name: .metadata.name, namespace: .metadata.namespace, claimName: .spec |  select( has ("volumes") ).volumes[] | select( has ("persistentVolumeClaim") ).persistentVolumeClaim.claimName }'
 ```
 ### Affinity
 

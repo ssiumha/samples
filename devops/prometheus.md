@@ -5,10 +5,40 @@
 서버, 서비스 모니터링을 하기 위해 metric, alert을 관리해주는 모니터링 솔루션.
 kube-prometheus-stack으로 prometheus, grafana, alertmanager, exporter 등을 한번에 관리할 수 있다.
 
+## Metric Type
+
+- Gauge
+  - 한순간의 값, 보통 그 값을 그대로 사용할 수 있다.
+  - 가령 up 같이 지금 이 순간 켜져있는가? (0 or 1) 현재 메모리량은? (99M) 같은 값에 사용된다
+  - 현재 'xxx'량에 사용한다고 생각해도 될듯 (온도, 현재 CPU사용량, 현재 스레드 갯수 등)
+- Counter
+  - 선형적으로 누적되는 값. 보통 rate, increase를 감싸서 사용하게 된다
+  - 순간적인 값보다는 변화량, 추세를 관찰할 때 쓸 수 있다
+  - 완료된 작업수, 요청 수 등등
+  - 감소되는 값은 사용하지 않는다
+- Histogram
+  - 요청 시간, 요청 크기 등 관측 값을 쌓으며 표본을 `_bucket`에 쌓고 `_sum`, `_count`을 별도로 취합해준다
+  - bucket은 유저가 직접 지정하며 분포 단위를 정의해놓아야한다
+    - 예를 들어 request_duration: `[0.1, 0.2, 0.5, 1.0, 5.0, 10.0, 60.0]` 이면 요청시간을 0~60초 사이의 값으로 정의하고 쌓는다
+  - bucket의 값을 histogram_quantile 함수를 통해 누적 표본값에 대한 하위 99% 등의 값을 얻어낼 수 있다
+  - `http_request_duration_seconds{le="0.5",}` 형태로 중앙으로부터의 임계값을 직접 가져올 수도 있다
+- Summary
+  - histogram과 거의 같지만 값을 그대로 쌓고, 실제 분포를 지속적으로 계산한다
+  - bucket 정의를 제대로 할 수 없는 상황에서 사용한다고 생각하면 될듯
+  - 측정된 값의 합인 sum, 측정 횟수는 count을 갖고 있으며 _bucket 대신 실제로 쌓인 값을 가져올 수 있다
+  - http_request_duration_seconds{quantile="0.5"}
+
 ## PromQL
 
 - https://awesome-prometheus-alerts.grep.to/rules
 - https://prometheus.io/docs/prometheus/latest/querying/functions/
+
+- https://grafana.com/blog/2021/01/29/basics-and-best-practices-for-getting-started-with-promql/
+- https://promlabs.com/promql-cheat-sheet/
+- https://promlens.com : 일종의 cheatsheet tool, grafana에서 직접 붙이는거보다 좋은듯. local에 띄워서 잘 붙여써보자
+- https://prometheus.io/docs/practices/naming/
+
+- https://www.robustperception.io/reduce-noise-from-disk-space-alerts
 
 ```
 # vector
@@ -17,15 +47,18 @@ ex) up[1h:10m] offset 1w29h30m
 
 # functions
 
-<instant-vector> : 순수한 메트릭 값
-<range-vector> : [4m] 등으로 시간구간을 줘서 가공된 값
+<instant-vector> : 순수한 메트릭 값, 여러 metric이 하나의 카테고리에 모인 일종의 1차원 배열
+                 : instance-vector는 그리면 하나의 그래프로 나온다
+<range-vector> : [4m] 등으로 시간구간을 줘서 가공된 값, metric 별로 카테고리 되어있는 일종의 n(metric 갯수)차원 배열
+               : range-vector는 메트릭별로 여러 그래프 선이 그려진다
 
 ## 반환은 전부 instant-vector
 delta( range-vector ) : 구간내 처음과 맨끝의 값 차이를 구한다
 idelta( range-vector) : 구간내 값중 가장 마지막 2개의 차이를 구한다
 increase( range-vector ) : 구간내의 값의 증가량을 구한다
-rate( range-vector ) : 구간 양끝값을 사용한 증가율을 구한다 (0~1)
-irate( range-vector ) : 구간내 값중 가장 마지막 2개의 증가율을 구한다 (0~1).
+rate( range-vector ) : 구간 양끝값의 차이를 갖고 1초당 변화량을 구한다
+                     : 1분마다 1씩 증가하는 메트릭을 변환할 경우 [ 1 2 3 4 5 ]  -> [ 0.016 0.016 0.016 0.016 0.016 ] ??
+irate( range-vector ) : 구간내 값중 가장 마지막 2개의 차이를 갖고 1초당 변화량을 구한다
                         rate에 비해 값의 변화량이 급격한 경향이 있어서 피크값 체크에 유용
 
 ## 조건검사 함수
@@ -42,11 +75,22 @@ histogram_quantile(<0-1>, <instant vector>) : 하위 n%에 해당하는 값을 �
 sum by (<labels>) (<metrics>)
 sum (metrics) by (<labels>)
 
+xxx_over_time : 지정된 지속적인 값에 대해 연산한다
+absent_over_time( up[5m] ) : 5m 동안 지표가 없는 경우에 대한 vector를 만듬
+
+# predict_linear
+# 선형적으로 지표를 '예상'한 그래프를 만들 수 있다
+predict_linear(node_filesystem_free{job="node"}[1h], 4 * 3600) < 0
+  : 1시간 단위의 추세를 보고 4시간 안에 남은 파일 공간이 0 이 되는지 판단
+predict_linear(disk_usage_bytes[4h], 3600) : 지난 4시간을 갖고 앞으로 1시간 뒤의 그래프를 예측
 
 # and or not
 <expr> and vector(1) # intersection
 <expr> or vector(0) # union
 <expr> unless vector(0) # complement
+
+example: total_request_count > 100 and on() success_request_rate < 80
+  : 조건이 둘다 맞을 때만 좌측의 그래프를 그려준다
 ```
 
 ## AlertManager

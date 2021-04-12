@@ -1,7 +1,11 @@
-# Devops 이것저것
+# Devops 작업하며 만난 이슈들
 
 - [infra](./infra.md)
 - [prometheus](./prometheus.md)
+- [prometheus-metrics](./prometheus-metrics.md)
+- [kafka](./kafka.md)
+
+- [aws](./aws.md)
 - [aws-cli](./aws-cli.md)
 
 
@@ -10,6 +14,18 @@
 - runbook
 - prometheus local test
 - jvm old gen gc
+
+- https://grafana.com/docs/grafana/latest/datasources/tempo/
+  - App tracer
+- otel: https://opentelemetry.io/docs/concepts/
+- jaeger: https://medium.com/jaegertracing/jaeger-and-opentelemetry-1846f701d9f2
+
+
+## links
+
+- https://kubernetes.github.io/ingress-nginx/examples/auth/oauth-external-auth/
+- oauth2-proxy
+
 
 ## etc
 

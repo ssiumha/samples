@@ -133,3 +133,13 @@ docker volume prune
 # crontab에서 쓰자
 0 9 * * * docker system prune -f --volumes 2>&1 > /tmp/docker-system-prune
 ```
+
+
+## gosu
+
+```
+exec gosu user bundle exec rails server
+```
+
+container 환경에서 쓰기 복잡한 유저, 권한 설정과 su, sudo 사용을 대체하기 위해 만들어진 툴.
+특정 프로세스를 특정 권한으로 제한하기 위해 사용된다.
