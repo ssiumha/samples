@@ -1,16 +1,5 @@
 # infra
 
-## terrform
-
-```bash
-terraform init
-
-terraform refresh
-# <update tf files...>
-terraform plan -out plan.out | tee plan.std.out
-terraform apply plan.out
-```
-
 
 ## helm
 
@@ -35,6 +24,17 @@ helm rollback --namespace data --wait kafka 99
 
 - https://kubernetes.github.io/ingress-nginx/examples/auth/basic/
 - https://github.com/ContainerSolutions/k8s-deployment-strategies
+
+- https://codeberg.org/hjacobs/kubernetes-failure-stories : https://k8s.af
+- https://ymmt.hatenablog.com/entry/k8s-things
+
+- https://speakerdeck.com/daikurosawa/understanding-cpu-throttling-in-kubernetes-to-improve-application-performance-number-k8sjp
+- https://medium.com/omio-engineering/cpu-limits-and-aggressive-throttling-in-kubernetes-c5b20bd8a718
+  - kr: https://da-nika.tistory.com/192
+- https://erickhun.com/posts/kubernetes-faster-services-no-cpu-limits/
+
+100ms 동안 얼마나 점유했는가?가 기준이니까 CPU limit에 1000ms를 넣으면 0.1초 점유가 된단건가?
+
 
 ```bash
 # context switch 없이 다른 환경 사용하기
@@ -100,7 +100,37 @@ livenessProbe:
 # 실제 사용중인 volume 가져오기
 kubectl get pods -A -o=json \
   | jq -c '.items[] | {name: .metadata.name, namespace: .metadata.namespace, claimName: .spec |  select( has ("volumes") ).volumes[] | select( has ("persistentVolumeClaim") ).persistentVolumeClaim.claimName }'
+
+
+# label selector
+kubectl get pod -l app=redis
+kubectl get pod -l app!=redis
+kubectl describe node -l 'beta.kubernetes.io/instance-type in (m5.large, m5.xlarge)'
+
+# label column
+#   - 기본 정보 이외에 추가적인 label 정보를 출력시켜줌
+#   - 복수개의 type에 대해 쿼리할 때 없다고 에러가 발생하지 않음
+kubectl get node,ds -A -Lbeta.kubernetes.io/instance-type
+
+# explain
+# - Resource Kind의 describe 명세를 가져올 수 있다
+# - 근데 거의 kind, meta, status라서 좀 미묘
+kubectl explain Certificate
+
+# pod 정보를 node 이름이랑 같이 가져오기
+kubectl get pod -A -o=custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName
+
+
+# get raw
+## etcd healthcheck
+kubectl get --raw=/healthz/etcd
+
+## query api server
+kubectl get --raw=/apis
+kubectl get --raw=/logs/kube-apiserver.log
 ```
+
+
 ### Affinity
 
 pod가 새로 뜰 때, 어떤 node를 선택할지 사용자가 임의로 룰을 지정하는 기능.
@@ -171,5 +201,3 @@ spec:
     name: letsencrypt-production
     kind: ClusterIssuer
 ```
-
-

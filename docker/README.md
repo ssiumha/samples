@@ -28,6 +28,30 @@ FROM $IMAGE_NAME as img2
 - IMAGE_NAME이 registry-url/img:latest고 target이 img2 면 무조건 registry에서 다운받아옴
 - IMAGE_NAME이 없으면 img1을 빌드하고 img2를 사용
 
+### ONBUILD
+
+```
+ONBUILD RUN ...
+ONBUILD COPY ...
+```
+
+처음 적힌 FROM 이미지에서는 실행되지 않지만, 만약 ONBUILD가 정의된 이미지를 FROM으로 가져와 사용하면
+그 때 작동하기 시작하는 키워드.
+
+상속처럼 사용할 수 있고 buildstage 사이에 중복되는 내용을 최소화하는데 쓸 수도 있을듯
+
+### ADD
+
+```
+ADD <url|path> /app
+
+# github 저장소 파일을 바로 image에 포함시키기
+ADD https://github.com/<account>/<reponame>/archive/master.tar.gz /app
+```
+
+- COPY랑 다르게 URL에서 다운로드 받거나 tar.gz를 자동으로 압축해제하는 기능이 포함되어있다
+- 일종의 사이드이펙트가 있는 기능이므로 필요한게 아니면 COPY를 쓰는게 좋을듯
+
 ### cache
 
 cache는 기본적으로 명령 한줄 단위로 레이어가 구성되며
