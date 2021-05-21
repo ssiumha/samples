@@ -1,26 +1,6 @@
-# infra
+# kube
 
-
-## helm
-
-```
-helm status -n<namespace> <release_name>
-
-helm diff upgrade <release_name> <helm_chart> --namespace <namespace> --values=values.yaml --allow-unreleased
-helm diff rollback --namespace <namespace> <release_name> <revision>
-
-helm get values <release_name> --namespace <namespace>
-
-helm history --namespace <namespace> <release_name> --max 3
-
-# {{ .Chart }}, {{ .Release }} 에 접근할 수 있지만 다른 템플릿 기능은 쓰지 못할 때 이용
-helm template . --show-only values.yaml.tmpl > values.yaml
-
-helm rollback --namespace data --wait kafka 99
-```
-
-
-## kube
+- https://docs.pixielabs.ai : opensource kube monitoring tool
 
 - https://kubernetes.github.io/ingress-nginx/examples/auth/basic/
 - https://github.com/ContainerSolutions/k8s-deployment-strategies
@@ -28,10 +8,11 @@ helm rollback --namespace data --wait kafka 99
 - https://codeberg.org/hjacobs/kubernetes-failure-stories : https://k8s.af
 - https://ymmt.hatenablog.com/entry/k8s-things
 
-- https://speakerdeck.com/daikurosawa/understanding-cpu-throttling-in-kubernetes-to-improve-application-performance-number-k8sjp
-- https://medium.com/omio-engineering/cpu-limits-and-aggressive-throttling-in-kubernetes-c5b20bd8a718
-  - kr: https://da-nika.tistory.com/192
-- https://erickhun.com/posts/kubernetes-faster-services-no-cpu-limits/
+- kube resources.limits.cpu throttling issue
+  - https://speakerdeck.com/daikurosawa/understanding-cpu-throttling-in-kubernetes-to-improve-application-performance-number-k8sjp
+  - https://medium.com/omio-engineering/cpu-limits-and-aggressive-throttling-in-kubernetes-c5b20bd8a718
+    - kr: https://da-nika.tistory.com/192
+  - https://erickhun.com/posts/kubernetes-faster-services-no-cpu-limits/
 
 100ms 동안 얼마나 점유했는가?가 기준이니까 CPU limit에 1000ms를 넣으면 0.1초 점유가 된단건가?
 
@@ -131,21 +112,66 @@ kubectl get --raw=/logs/kube-apiserver.log
 ```
 
 
-### Affinity
+## Affinity
 
-pod가 새로 뜰 때, 어떤 node를 선택할지 사용자가 임의로 룰을 지정하는 기능.
+- https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+- https://cstoku.dev/posts/2018/k8sdojo-18/#topology-key
 
-requiredDuringSchedulingIgnoredDuringExecution
-preferredDuringSchedulingIgnoredDuringExecution
+스케쥴러가 새 pod를 띄울 때 어디에 띄울지를 결정하는 룰을 지정한다.
+
+- 만약 스케쥴링 되는 resource.request보다 node의 CPU, 메모리가 적다면 먼저 제외하고 처리될듯?
+  - 혹은 require로 설정되어있다면 node 안에 있는 pod를 부족한 리소스만큼 이전시킬지도 모르겠다
+- 스케쥴할 때 특정 정보를 보고 선택/제외시킬 수 있다 (podAffinity, podAntiAffinity, nodeAffinity)
+- 현재 떠있는 pod를 조건으로 걸거나 node의 label을 조건으로 걸 수 있다 (pod affinity, node affinity)
+- 가중치를 기준으로 러프하게 계산하거나 필수 조건으로 만들 수도 있다 (preferred, required)
+
+- preferred는 규칙에 맞을 때마다 가중치를 더하고, 가장 높은 가중치 node에 스케쥴링한다
+  - 규칙마다 weight 필드로 가중치를 지정할 수 있다 (1~100)
+- matchExpressions에서 사용가능한 operator
+  - 일치하는 값이 있는지: In, NotIn
+  - 값의 유무: Exists, DoesNotExists
+- topologyKey
+  - node의 label을 이용해서 만드는 Affinity 규칙 적용 '범위'
+  - topologyKey로 사용가능한 node의 label
+    - hostanme
+    - zone - ex) zone 마다 하나씩 뜨도록
+    - type - ex) 특정 type에 대해서만 뜨도록
 
 
-### Ingress
+```
+# beta::app=memcached pod가 있는 node에만 스케쥴링한다 (강제)
+affinity:
+  podAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - topologyKey: kubernetes.io/hostname
+      namespaces: beta
+      labelSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+            - memcached
 
-#### cert-manager wildcard certificate
+# app=kafka가 없는 node에만 스케쥴링한다 (강제)
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - kafka
+```
+
+## Ingress
+
+### cert-manager wildcard certificate
 - https://cert-manager.io/docs/configuration/acme/dns01/
 - https://letsencrypt.org/docs/faq/#does-let-s-encrypt-issue-wildcard-certificates
 
-#### Rewrite
+### Rewrite
 
 - https://kubernetes.github.io/ingress-nginx/examples/rewrite/
 - https://www.nginx.com/blog/creating-nginx-rewrite-rules/

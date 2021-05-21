@@ -3,9 +3,16 @@
 - [css](./css.md)
 - [js](./js.md)
 
+
+## Tips
+
+- https://markodenic.com/html-tips/
+
+
 ## tools
 
 - https://developers.google.com/web/tools/lighthouse
+- https://markodenic.com/css-generators/
 
 
 ## XPath

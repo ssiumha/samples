@@ -1,7 +1,7 @@
 # Devops 작업하며 만난 이슈들
 
-- [infra](./infra.md)
-
+- [kube](./kube.md)
+- [helm](./helm.md)
 - [terraform](./terraform.md)
 
 - [prometheus](./prometheus.md)
@@ -13,6 +13,9 @@
 
 
 - https://www.robustperception.io/blog
+
+- https://github.com/ContainerSolutions/k8s-deployment-strategies
+
 
 ## 기타
 
