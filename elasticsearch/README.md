@@ -39,6 +39,22 @@ Document  := Row
 - Shard 단위로 연산이 이뤄지기 때문에 Shard 갯수가 너무 적거나 많게 만들면 안된다
   - 권장하는 Shard 크기는 10GB ~ 50GB: https://www.elastic.co/guide/en/elasticsearch/reference/7.10/size-your-shards.html
 
+- 하나의 Shard는 여러개의 Segement로 이뤄져있다
+  - 역색인 정보가 담겨져 있는 검색 처리의 최소단위
+  - 데이터가 추가될 때 메모리에 모아두었다가 디스크에 새 Segement를 작성하고 refresh 되며 검색이 가능해진다
+  - Segement는 불변이며 데이터가 삭제되도 마크만 하고 실제로 지우진 않는다
+  - Segement Merge
+    - 삭제 마크된 Segement가 임계치를 넘어가거나 너무 많은 수의 Segement가 생기면 병합 작업이 진행된다
+    - 합쳐지는 동안 들어오는 쿼리는 기존 Segement를 참조하며 병합은 복제된 Segement를 사용해서 이뤄진다
+      - 병합 처리를 위한 disk 여유공간 필요
+    - Segement Merge는 무거운 작업이므로 튜닝할 때 주의해야함
+
+  ```
+  merge, segment에 관련된 설정 확인하기:
+  GET /<index>/_settings?include_defaults=true
+  GET /_stats
+  ```
+
 - 7.0 이전에는 Index가 DB 개념이고 Type이 Table 개념이었으나
   의도했던 개념과 실사용이 달라서 삭제됨 (https://www.elastic.co/guide/en/elasticsearch/reference/current/removal-of-types.html)
 
@@ -47,6 +63,7 @@ Document  := Row
 - text: 입력된 문자열을 token 단위로 파싱해서 색인을 만듬, 부분일치용 타입
 - https://www.elastic.co/guide/en/elasticsearch/reference/current/keyword.html
 - https://www.elastic.co/guide/en/elasticsearch/reference/current/text.html
+
 
 ## Trouble Shooting
 

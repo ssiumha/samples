@@ -22,3 +22,27 @@ document.getElementById('test').dataset.contentId
 document.getElementById('test').dataset.contentId = "999"
 document.getElementById('test').dataset.bookmarked === 'true'   // bookmarked type: string
 ```
+
+### simple debounce
+
+입력 자동 완성 같은 호출 이벤트가 짧은 시간 내에 대량으로 일어나지만, 적당하게 한번만 호출되어야할 때 사용된다.
+이거 때문에 lodash를 가져오는건 닭잡는 대검이니 코드 스니펫 메모..
+
+```js
+<script>
+document.getElementById('#search-input-box')
+        .addEventListener('keyup', debounce(reqAutoComplete, 2000));
+
+function debounce(callback, delay) {
+    let timer;
+    return function() {
+        clearTimeout(timer);
+        timer = setTimeout(callback, delay);
+    }
+}
+
+function reqAutoComplete() {
+  ...
+}
+</script>
+```

@@ -167,3 +167,27 @@ exec gosu user bundle exec rails server
 
 container 환경에서 쓰기 복잡한 유저, 권한 설정과 su, sudo 사용을 대체하기 위해 만들어진 툴.
 특정 프로세스를 특정 권한으로 제한하기 위해 사용된다.
+
+
+## export data
+
+```
+mkdir -p $(EXPORT_PATH)
+docker run --rm -i \
+  -v $(EXPORT_PATH):/export \
+  --entrypoint bash \
+  <IMAGE_NAME> \
+  -c 'cp -r /build_result /export'
+ls $(EXPORT_PATH)
+```
+
+주의: github action에서 쓰려고 하면 volume mount가 host 기준으로 되버리므로 cp를 써야한다
+
+
+```
+docker cp $(docker create --rm registry.example.com/ansible-base:latest):/home/ansible/.ssh/id_rsa ./hacked_ssh_key
+
+docker create -ti --name dummy IMAGE_NAME bash
+docker cp dummy:/path/to/file /dest/to/file
+docker rm -f dummy
+```
